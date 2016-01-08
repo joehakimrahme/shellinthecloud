@@ -1,0 +1,27 @@
+If you're using a Unix box, your system comes with a built in dictionary. I use this file to come up with random names.
+
+It picks a random word and removes a random vowel from it.
+    
+
+    import random
+    
+    
+    dictionary = "/usr/share/dict/words"
+    VOWELS = "aeiouy"
+    
+    with open(dictionary) as d:
+        words = d.readlines()
+        title = random.choice(words)
+        print title.replace(random.choice([v for v in VOWELS if v in title]), "")
+
+
+Here are some results I got from it:
+
+    >>> zeugldntid
+    >>> sptmfid
+    >>> pleurodyna
+    >>> bratticr
+    >>> vigilant
+    >>> ntamable
+
+Have fun.
