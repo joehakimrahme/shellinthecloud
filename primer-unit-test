@@ -1,0 +1,75 @@
+A small primer on unit testing
+==============================
+
+This article is intended for programmers who are already sold on the importance of writing unit tests but are struggling to do it on anything more than dummy examples. I hope that this can help get you started.
+
+
+Understanding unit tests through an analogy
+-------------------------------------------
+
+To understand the scope of unit testing let's work with an analogy. Imagine you're working on a big mechanical machine, maybe a car or a tractor. These big machines are made of handles, knobs, keys and buttons. Unit testing is like a suite of tests that will exercise the full range of motion on those knobs and handles, that will press every button and turn every key. The goal here is simply to make sure that there's nothing broken in these components.
+
+Here's what unit testing ISN'T:
+
+* A tool that guarantees that no mistakes will creep into production
+* A tool to verify that the code is yielding correct results
+* A way to describe how your machien works.
+
+Keep in mind that unit tests aren't the only type of tests you can write. It's not a one shot panacea that will solve all your problems, instead a specific tool helping you protect yourself from a specific type of errors.
+
+Unit tests for the software developers
+--------------------------------------
+
+Following this analogy, unit tests is a way for you to execute all the possible execution paths of your function. For instance, looking at yet another dummy example:
+
+    def function(a, b):
+        if a >= 0 and b < 0:
+            return 1
+        if a >= 0 and b >= 0:
+            return 2
+        if a < 0 and b < 0:
+            return 3
+        else:
+            return 4
+
+Unit testing is not about asserting that the reutrned results are correct, but that every branch of execution is viable and won't break when executed. Therefore I will want to have something like this in my unit tests:
+
+    def test_function():
+        assert function(0, -1) == 1
+        assert function(0, 0) == 2
+        assert function(-1, 0) == 3
+        assert function(-1, -1) == 4
+
+I would even argue that assertions are not that important in this test and I wouldn't mind having something even more simplified, like this:
+
+    def test_function():
+        function(0, -1)
+        function(0, 0)
+        function(-1, 0)
+        function(-1, -1)
+
+Remember the goal here is to execute every branch in your code. We don't care about the result so much, simply validating that executing all this went okay and didn't raise any unexpected exceptions.
+
+*Of course, it's tough arguing whether or not to make assertions on return values, especially when working on dummy examples like this. My rule of thumb is to make assertions when it's easy and obvious and not bother too much with assertions if it's ambiguous.*
+
+
+Tips for writing good unit tests
+--------------------------------
+
+Now that you understand how to write unit tests, here are some tips to keep your sanity while you're doing it:
+
+* unit tests should execute quick.
+
+Ideally, a developer should execute the full suite of unit tests multiple times a day. You don't want your suite to take too long.
+
+* unit tests should mock outside dependencies
+
+I won't get into mocking/stubbing, but I think it's a good idea to get familiar with a mocking library in your favorite language and read the documentation exhaustively. 
+
+* unit tests should NOT be exhaustive. 
+
+In the spirit of quick execution, keep in mind that you don't need 100% coverage to have a strong test suite. You may want to spend a lot of effort covering certain tricky parts of your code while almost ignoring others. With experience, you'll know what can be ignored and what cannot.
+
+* use coverage to detect which branches of your code are not tested
+
+Coverage is a very useful tool that can be very easily misused. To keep things simple, don't use coverage to set an arbitrary limit of "acceptable" tests. Instead use it as a basis of analysis to know which parts of your code are lacking in testing.

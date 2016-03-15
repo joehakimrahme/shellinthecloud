@@ -1,0 +1,16 @@
+curl as an FTP client
+=====================
+
+`curl` natively supports FTP:
+
+* list files
+
+`curl ftp://<ip>/ --user username:password`
+
+* get file
+
+`curl ftp://<ip>/myfile --user username:password`
+
+* upload file
+
+`curl ftp://<ip>/ -T my_local_file --user username:password`
