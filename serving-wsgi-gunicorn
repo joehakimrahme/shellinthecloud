@@ -1,0 +1,41 @@
+Here's how to serve a wsgi app using Gunicorn and Nginx on Fedora:
+
+gunicorn.service
+----------------
+
+Create a systemd service launching your app `/etc/systemd/system/gunicorn.service`.
+
+
+    [Unit]
+    Description=gunicorn daemon
+    After=network.target
+
+    [Service]
+    User=www-data
+    Group=nginx
+    WorkingDirectory=/var/www/your_app
+    ExecStart=/usr/bin/gunicorn --bind unix:your_app.sock wsgi:application
+
+
+Launch the service with `systemctl`:
+
+    # systemctl daemon-reload
+    # systemctl start gunicorn
+
+nginx.conf
+----------
+
+The file `/etc/nginx/nginx.conf`:
+
+
+        location / {
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_pass http://unix:/var/www/your_app/your_app.sock;
+        }
+
+Restart nginx
+
+    # systemctl restart nginx
