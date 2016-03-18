@@ -1,4 +1,5 @@
-Here's how to serve a wsgi app using Gunicorn and Nginx on Fedora:
+Serving a Flask app on Fedora using Gunicorn and Nginx
+======================================================
 
 gunicorn.service
 ----------------
