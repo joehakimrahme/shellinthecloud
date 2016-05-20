@@ -1,0 +1,77 @@
+User-Agents are weird
+=====================
+
+I was reading up on User-Agents as part of my work on
+[Blogstrap](https://github.com/joehakimrahme/blogstrap) and I noticed that
+Chrome declares this as User-Agent:
+
+> Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36
+
+And this is what Safari declares:
+
+> Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/601.5.17 (KHTML, like Gecko) Version/9.1 Safari/601.5.17
+
+In comparison here're the User-Agents of the other http clients on my machine:
+
+* `curl`: curl/7.43.0
+* `wget`: Wget/1.17.1
+* Firefox: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:46.0) Gecko/20100101 Firefox/46.0
+* The [Requests library](https://requests.readthedocs.io/en/master/): python-requests/2.9.1
+
+How come Chrome and Safari declare competing product in their User-Agents?
+
+
+Browser sniffing deemed bad
+---------------------------
+
+The [RFC specifying HTTP 1.1](https://tools.ietf.org/html/rfc7231#section-5.5.3)
+mentions:
+
+> Likewise, implementations are encouraged not to use the product
+> tokens of other implementations in order to declare compatibility
+> with them, as this circumvents the purpose of the field.
+
+According to the
+[User-Agent string history](http://webaim.org/blog/user-agent-string-history/),
+we got here because web developers were refusing to serve content to browsers
+despite them catching up with features. Here's an extract:
+
+> And Internet Explorer supported frames, and yet was not Mozilla, and so was
+> not given frames. And Microsoft grew impatient, and did not wish to wait for
+> webmasters to learn of IE and begin to send it frames, and so Internet
+> Explorer declared that it was "Mozilla compatible" and began to impersonate
+> Netscape, and called itself Mozilla/1.22 (compatible; MSIE 2.0; Windows 95),
+> and Internet Explorer received frames, and all of Microsoft was happy, but
+> webmasters were confused.
+
+
+The idea of serving different content based on browser detection is called
+[Browser sniffing]() and is generally regarded as a bad idea. Mozilla openly
+[discourages using browser detection for serving content](https://developer.mozilla.org/en-US/docs/Browser_detection_using_the_user_agent). Instead
+it encourages **feature detection**:
+
+> Feature detection is where you don't try to figure out which browser is
+> rendering your page, but instead you check to see if the specific feature you
+> need is available. If it's not, you use a fallback. However, never use feature
+> detection in the rare cases when you actually want browser detection, since
+> other browsers may implement the feature in the future, but differently. Bugs
+> caused by this can be insidiously hard to find and fix.
+
+Blogstrap and User-Agents
+-------------------------
+
+In order to understand how Blogstrap uses User-Agents you need to understand how
+it works. Here are the 2 relevant design principles:
+
+* HTML is rendered client-side. Blogstrap only serves markdown along with a
+  javascript library that does the markdown2html conversion. One useful feature
+  is to have the ability to serve HTML for web crawlers. This is useful for
+  those who care about SEO. In order to do this, Blogstrap compares the
+  User-Agent string to a
+  [list of publicly known web crawlers](http://www.useragentstring.com/pages/Crawlerlist/).
+* HTML is not friendly to terminals. If Blogstrap detects that the requests
+  comes from `curl`, Blogstrap will serve the unaltered markdown text.
+
+I have no idea if this is a bad practice or not. I don't think I can get away
+with feature detection since I'm not doing the sniffing client-side. I guess
+I'll have to wait and see if this turns out to be a bad idea.
