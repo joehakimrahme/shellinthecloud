@@ -21,8 +21,8 @@ In comparison here're the User-Agents of the other http clients on my machine:
 How come Chrome and Safari declare competing product in their User-Agents?
 
 
-Browser sniffing deemed bad
----------------------------
+Browser sniffing considered harmful
+-----------------------------------
 
 The [RFC specifying HTTP 1.1](https://tools.ietf.org/html/rfc7231#section-5.5.3)
 mentions:
