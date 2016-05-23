@@ -31,69 +31,82 @@ Setup
 * Start by creating a directory to hold all the necessary files and git
   repositories you will need.
 
-    $ mkdir blogstrap-root
-    $ cd blogstrap-root
+```
+$ mkdir blogstrap-root
+$ cd blogstrap-root
+```
 
 * Create the virtualenv and install the necessary packages. It's not necessary
   to install in a virtualenv. Feel free to skip the first 2 steps if you know
   what you're doing.
 
-    $ virtualenv .venv
-    $ source .venv/bin/activate
-    $ pip install ansible Blogstrap
+```
+$ virtualenv .venv
+$ source .venv/bin/activate
+$ pip install ansible Blogstrap
+```
 
 * Clone the BAIO playbook
 
-    $ git clone https://github.com/joehakimrahme/BAIO
-
+```
+$ git clone https://github.com/joehakimrahme/BAIO
+```
 
 Initialize the blog
 -------------------
 
 * Create the blog directory
 
-    $ mkdir my-blog
-    $ blogstrap init --target my-blog
-    $ cd my-blog
+```
+$ mkdir my-blog
+$ blogstrap init --target my-blog
+$ cd my-blog
+```
 
 This creates a bunch of files:
 
-    $ tree -a
-    .
-    ├── .blogstrap.conf
-    ├── articles
-    └── wsgi.py
+```
+$ tree -a
+.
+├── .blogstrap.conf
+├── articles
+└── wsgi.py
 
-    1 directory, 2 files
+1 directory, 2 files
+```
 
 The most important one being the `articles` directory. This directory should
 hold all the articles. Create the following test blog article:
 
-    $ cat articles/hello-world
-    Hello World
-    -----------
+```
+$ cat articles/hello-world
+Hello World
+-----------
 
-    This article is published with Blogstrap and deployed with BAIO.
+This article is published with Blogstrap and deployed with BAIO.
 
-    Here we can showcase some markdown features:
+Here we can showcase some markdown features:
 
-    * one
-    * two
-    * three
+* one
+* two
+* three
 
-    A quote:
+A quote:
 
-    > And you know what they call a... a... a Quarter Pounder with Cheese in
-    > Paris?
+> And you know what they call a... a... a Quarter Pounder with Cheese in
+> Paris?
+```
 
 * Finally initialize a git repository at the root of the blog directory and push
   it to Github:
 
-    $ git init
-    $ git add .blogstrap.conf articles wsgi.py
-    $ git commit -m "initial commit"
-    $ # Create a repo on github and configure your remote
-    $ git push -u origin master
+```
+$ git init
+$ git add .blogstrap.conf articles wsgi.py
+$ git commit -m "initial commit"
+$ # Create a repo on github and configure your remote
+$ git push -u origin master
+```
 
 Note the public URL of the `origin` repository, you'll use it later.
 
@@ -103,31 +116,33 @@ Deploy with ansible
 
 * Switch to the BAIO directory
 
-    $ cd ../BAIO
+```
+$ cd ../BAIO
+```
 
 * Create the `hosts` file
 
-    $ cat hosts
-    [blogservers]
-    X.X.X.X  # put the IP of your server here
+```
+$ cat hosts
+[blogservers]
+X.X.X.X  # put the IP of your server here
+```
 
 * Define the variables for your deployment:
 
-    $ cat group_vars/all.yml
-    # This is used for the nginx server configuration
-    nginx_port: 80
-    server_hostname: server.example.com
-
-    # Blogstrap git upstream
-    blogstrap_git: YOUR_PUBLIC_BLOG_URL
-
-    # Set Timezone
-    timezone: Europe/Paris
+```
+$ cat group_vars/all.yml
+nginx_port: 80
+server_hostname: server.example.com
+blogstrap_git: YOUR_PUBLIC_BLOG_URL
+timezone: Europe/Paris
+```
 
 * You're now ready for deployment
 
-    $ ansible-playbook -i hosts site.yml
-
+```
+$ ansible-playbook -i hosts site.yml
+```
 
 Access the blog
 ---------------
