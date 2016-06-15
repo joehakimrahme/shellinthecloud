@@ -1,0 +1,59 @@
+How do you share large files?
+=============================
+
+There are 3 ways I can think of to share files like pictures and videos with my
+friends:
+
+* Email
+* 3rd party services (like [Dropbox](https://www.dropbox.com), or
+  [Wetransfer](https://www.wetransfer.com))
+* Upload the file to a server yourself and provide your friend with a
+  downloadable URL.
+  
+While email is great for sharing small files quickly, it falls short when
+sharing a lot of files, or worse, a single large file (> 20 MB or so). Here's
+what
+[Wikipedia has to say about it](https://en.wikipedia.org/wiki/Email_attachment):
+
+> when Google's gmail service increased its arbitrary limit to 25MB it warned
+> that: "you may not be able to send larger attachments to contacts who use
+> other email services with smaller attachment limits". In general, 10MB is
+> considered safe for the maximum size of an email.
+
+3rd party services usually work very well but they come at the cost of privacy,
+control and flexibility. It's possible to mitigate the privacy cost by using
+cryptography, but this method will always be limited by the fact that you're
+handing someone else your data and asking them to transfer it to your friend.
+
+The final option, the DIY one, may seem like a major overhead: Creating an
+online server to hold the file and configuring some daemon to serve it could
+take a lot of time and money. After all, you just want to send a single file to
+your friend, it shouldn't take this much effort.
+
+Quickshare-playbook
+-------------------
+
+With Ansible (and an account at a solid cloud provider), I've figured out how to
+automate the deployment of the DIY option. I wrote a playbook and published it
+here: https://github.com/joehakimrahme/quickshare-playbook
+    
+
+The playbook comes with a quickstart guide in its README file detailing usage
+instructions. You will need to have a CentOS machine running somewhere. Cloud
+providers are perfect for this because you can spawn a machine quickly without
+downloading any ISO or using any of your local hardware performance. Also, they
+only bill you by the hour, meaning you can conveniently dispose of the VM as
+soon as the transfer is done and only be billed for the period of time it was
+up.
+
+For now the playbook is pretty rudimentary:
+
+* set up [vsftpd](https://security.appspot.com/vsftpd.html) and configure it to
+  allow anonymous downloads
+* upload the file to the FTP server.
+
+
+That's about it. In future releases I want to add more features like HTTP
+download, authentication, and multi-file support. In the meantime, I'm
+publishing this with the hope of getting early feedback to see what people think
+of this approach.
