@@ -1,0 +1,46 @@
+Ghost Stories Probabilities
+===========================
+
+This problem is an exercise in probability inspired by an amazing board game
+called [Ghost Stories]. In this game, we play Taoist monks fending off ghost
+invasions to protect the villagers from Wu-Feng, the Lord of Hell, and his army.
+
+A core mechanic of the game is to exorcise ghosts. Here's how the game works:
+
++ A ghost has a power and a color. For instance 'red2' has power=2 and
+  color='red'
++ There are 6 colors in the game:
+  ('black', 'white', 'red', 'yellow', 'green', 'blue')
++ Players have dice with each of the 6 color on their sides. The dice are
+  perfectly balanced.
++ In order to successfuly exorcise, the players roll 3 dice and need to match
+  the power of the monster. For instance if I try to exorcise a 'red2' ghost, I
+  need to roll at least 2 reds out of the 3 I throw.
++ White is always a wild card. No matter the color of the ghost, a white roll is
+  always a hit.
++ There are no white ghosts.
+
+**Level 1**: Give the probability of exorcising a ghostX for
+    X=1, X=2, X=3
+
+The Taoist monks we play have some special abilities to improve their odds a
+bit. For instance the green Taoist has a fourth die only he can use during
+exorcisms.
+
+**Level 2**: Give the probability of green Taoist exorcising a ghostX for
+    X=1, X=2, X=3 and X=4
+
+The blue Taoist has the ability to fight twice. If his first exorcism fails, he
+immediately re-rolls 3 dice.
+
+**Level 3**: Give the probability of blue Taoist exorcising a ghostX for
+    X=1, X=2, X=3
+
+One of the incarnations of Wu-Feng, Nameless, has the very evil power of
+nullifying the power of white rolls. As long as it is on the board, every white
+roll counts for a miss.
+
+**Final boss**: Go through level 1, 2 and 3 with Nameless on the board.
+
+
+[Ghost Stories]: https://boardgamegeek.com/boardgame/37046/ghost-stories
