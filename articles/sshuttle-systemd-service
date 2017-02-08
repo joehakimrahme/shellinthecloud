@@ -1,0 +1,30 @@
+Running sshuttle as a systemd service
+=====================================
+
+Here's the service unit file I wrote to launch sshuttle as a systemd
+service.
+
+    [Unit]
+    Description=sshuttle service a permanent tunnel
+    After=network.target
+
+    [Service]
+    ExecStart=/usr/bin/sshuttle -r user@host 0.0.0.0/0 --dns -D --pidfile=/var/run/sshuttle.pid
+    Restart=no
+    Type=forking
+    PIDFile=/var/run/sshuttle.pid
+    User=root
+
+    [Install]
+    WantedBy=multi-user.target
+
+A couple of specifications:
+
+* I had to define the `User` to be root explicitely as to avoid
+  entering the sudoer password explicitly.
+
+* make sure to launch sshuttle with `-D` so that it behaves like a
+  proper daemon.
+
+More info about sshuttle can be
+found [on their website](http://sshuttle.readthedocs.io/en/stable/).
