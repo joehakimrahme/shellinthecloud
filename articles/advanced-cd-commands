@@ -1,0 +1,164 @@
+Advanced uses of cd
+=====================
+
+Let's take a look at some fun ways to use `cd`. Since `cd` is a shell
+builtin and not an external program (there is no `/bin/cd`), it will
+naturally behave differently according to the shell you're using. Here
+we'll take a look at `bash` and `zsh`.
+
+
+Preliminary work
+-------------------
+
+In order to illustrate the commands we're doing, let's create a few directories:
+
+    $ mkdir -p /tmp/{foo,bar}/directory
+
+This will create the following directory structure:
+
+    $ tree /tmp
+    tmp
+    ├── bar
+    │   └── directory
+    └── foo
+        └── directory
+
+    4 directories, 0 files
+
+
+Bash tips
+-----------
+
+In no particular order:
+
+* If no arguments are given, `cd` will change the directory to the
+  "$HOME" env variable. Your shell should automatically set this
+  variable to your home directory, but it's definitely possible to
+  overwrite it. For instance:
+
+```
+$ HOME=/tmp cd
+$ pwd
+/tmp
+```
+
+* If, for whatever reason "$HOME" isn't set, bash will return an
+  error:
+
+```
+$ unset HOME
+$ cd
+bash: cd: HOME not set
+$ echo $?
+1
+```
+
+* If HOME is the empty string, then bash won't do anything but not
+  throw any errors:
+
+```
+$ HOME="" cd
+$ echo $?
+0
+```
+
+* `cd -` is a shorthand for `cd $OLDPWD`. "$OLDPWD" is updated after
+  each successful `cd` command. You can overwrite this variable at
+  will ;)
+
+```
+$ cd /tmp
+$ cd bar
+$ cd -
+/tmp
+$ OLDPWD=foo cd -
+foo
+$ pwd
+/tmp/foo
+```
+
+* `cd directory` If the `directory` argument DOESN'T start with a /, a
+  relative path must be resolved. The order of resolution will be
+  determined by the variable "$CDPATH". CDPATH is a colon-separated
+  list of directories that cd will go through in order until it hits a
+  valid directory. It's obviously possible to include `.` in the
+  CDPATH.If bash cannot find a valid directory in "$CDPATH" (or if
+  "$CDPATH" is empty), it will then look for `directory` inside the
+  current working directory. Some examples:
+
+```
+$ cd /tmp/foo
+$ CDPATH=/tmp/bar cd directory
+/tmp/bar/directory
+
+$ # including "." in the CDPATH
+$ cd /tmp/foo
+$ CDPATH=.:/tmp/bar cd directory
+/tmp/foo/directory
+
+$ # directory doesn't exist in CDPATH
+$ cd /tmp/foo
+$ CDPATH=/tmp cd directory
+$ pwd
+/tmp/foo/directory
+```
+
+* Note that when `cd` resolves a relative path from the CPDATH, or
+  when using `cd -`, bash will output the name of the directory it
+  found. The rest of the time, bash will change directories silently.
+
+
+ZSH tips
+----------
+
+Under zsh, `cd` has 3 forms:
+
+* The first form takes a single argument, and is similar to Bash's
+  `cd` with some minor variations (there's no "$OLDPWD", "$CDPATH" can
+  be an array, and `cd` without args won't give an error if "$HOME" is
+  unset) Note that zsh has a `-q` option that prevents it from
+  explicitly printing directory names (unlike Bash)
+
+* The second form takes 2 arguments. It will then replace arg1 with
+  arg2 in the current working directory path:
+
+```
+$ cd /tmp/foo/directory
+$ cd foo bar
+/tmp/bar/directory
+```
+
+* The third form takes a single argument of the form +n or -n. It will
+  change the current working directory according to the stack held in
+  the `dirs` command. Adding and removing directories to the stack is
+  done with the commands `pushd` and `popd`. I won't go in details
+  over these commands but here's a simple case:
+
+```
+% pushd /tmp
+/tmp ~
+% pushd foo
+/tmp/foo /tmp ~
+% pushd ../bar
+/tmp/bar /tmp/foo /tmp ~
+% cd +2
+/tmp
+% cd -1
+/tmp/foo
+% dirs
+/tmp/foo ~
+% cd -1
+/tmp/foo
+```
+
+Further reading
+------------------
+
+All this, and a lot more, can be found in the respective man pages of bash and zsh. Here's how to access them:
+
+* man cd (for bash)
+* man zshbuiltins
+
+Keep in mind that POSIX defines [how cd should behave][1]. You'll see that both bash and zsh are compatible with this.
+
+ [1]: http://pubs.opengroup.org/onlinepubs/9699919799/utilities/cd.html
