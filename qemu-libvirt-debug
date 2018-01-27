@@ -1,0 +1,49 @@
+Purpose: The below can be useful in any scenario where you'd like to
+know the interactions between libvirt and QEMU. But the below talks
+in the context of a live migration bug.
+
+If possible to perform the live migration test again, some log files
+that can be useful:
+
+  * Sanitized Nova debug logs (preferably contextual on the source and
+    destination hosts): compute.log, conductor.log, scheduler.log
+
+    To enable Nova debug logs, add these config attributes:
+        . . .  
+        verbose = True
+        debug = True
+        . . .
+
+    Restart Nova services:
+
+        $ openstack-service restart nova
+
+  * /var/log/libvirt/qemu/instance.log -- For both compute nodes involved. 
+    This will give us the QEMU CLI that's being used by libvirt
+
+    If the test can be repeated, it'll be useful to enable debug logging
+    for libvirt on the Compute nodes involved. As libvirt is the
+    component that's doing the heavy lifting under the hood. These
+    logs gives us detailed interactions between libvirt and QEMU on
+    source and destination Compute nodes. To enable:
+
+     1. In /etc/libvirt/libvirtd.conf, have these two config attributes:
+
+        . . .
+        log_filters="1:libvirt 1:qemu 1:conf 1:security 3:event 3:json 3:file 3:object 1:util"
+        log_outputs="1:file:/var/log/libvirt/libvirtd.log"
+        . . .
+
+     2. Restart libvirtd:
+
+        $ systemctl restart libvirtd
+
+     3. Repeat the test.
+
+     4. Capture the libvirt logs and attach them as plain text to the
+        bug.
+
+
+NOTE: Do *not* forget to turn off both the Nova and libvirt debugging
+controls once the test is finished -- otherwise, it continues to log
+heavily and can fill up the disk space quickly.
