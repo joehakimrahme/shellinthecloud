@@ -1,0 +1,86 @@
+SSH tips and tricks
+===================
+
+* Github exposes the public keys of its members. It's pretty handy if
+  you need them. Try it: `https://github.com/<username>.keys` Note
+  that a Github dev has tweeted that it's probably better to be using
+  the API to retrieve this, rather than relying on it being
+  exposed. (https://twitter.com/technoweenie/status/300449800279691264)
+  
+* You can use the `-R` flag to expose a local port on a remote
+  machine. This is useful for giving someone outside your network,
+  access to a port on your local machine, by forwarding it to a
+  distant machine you both have access to. The simplest way to forward
+  my local 8000 port to `mydistantserver:8080` is to do: `ssh -R
+  8080:localhost:8000 user@mydistantserver`.
+
+* You can use the `-D` flag to emulate a SOCKS proxy. SOCKS behave
+  like an http proxy and is supported by all modern browsers. This is
+  useful if you want to fake your location on the web or bypass some
+  firewall restrictions.
+
+* Options `-f`, `-N` and `-T` are useful for saving resources when you
+  just want to build a tunnel or forward ports, and don't want to run
+  any command. Check `man ssh` for more info on how to use them.
+  
+* `ssh-agent` is a great tool for caching your private key in
+  memory. This is useful if you have it encrypted (you should!) and
+  don't want to re-enter your passphrase on each connection. If your
+  client turns on `ForwardAgent`, and `AllowAgentForwarding` is
+  enabled on each intermediary server, holding your key in `ssh-agent`
+  will allow you to connect from one server to the next without
+  needing to replicate your private key everywhere. Beware of the
+  security implications of holding your unencrypted private key in a
+  cache though, depending on your use case it could be considered
+  risky. More info on `ssh-agent`: https://www.ssh.com/ssh/agent
+  
+* Passwords should die! If you're using ssh but not using public key
+  cryptography you're doing it wrong. If you have control over the
+  sshd daemon, you may want to consider using ECDSA keys, however a
+  lot of sshd are not configured to accept it, so the safest bet is to
+  use RSA. ECDSA and RSA offer roughly the same security level,
+  but ECDSA keys are much lighter.
+
+* Many people are unaware that the simplest way to deploy a public key
+  on a server is to use `ssh-copy-id`. The alternative consists of
+  manually logging in the remote server and editing the
+  `~/.ssh/authorized_keys` file, but this can break if the sshd server
+  is configured differently. The safest, most robust way to do this is
+  to use `ssh-copy-id`.
+  
+* Real programmers use butterflies! For the rest of us using boring
+  text editors, we can use remote editing features that work over
+  `ssh`. For vim users you can `vim scp://user@host/path/to/file`. For
+  emacs you can (and should!) learn to use the amazing Tramp.el
+  mode. For other editors... I don't know, but most modern editors
+  have remote editing options, so be sure to RTFM.
+  
+* If you plan on making multiple connections to the same host (like
+  modifying multiple files, or scp a file while you already have a
+  connection opened) you don't have to redo the authentication
+  handshake dance. Instead you could reuse an existing open connection
+  to speed up the process considerably. This can be achieved using
+  `ControlMaster` and `ControlPath`.
+  
+* If you need to redirect multiple ports you may want to consider
+  opting for a VPN solution instead. If you don't feel like setting up
+  a complex solution, but still want something more robust than
+  redirecting a multitude of ports, you may want to look at `sshuttle`
+  (https://github.com/sshuttle/sshuttle).
+  
+* `-D` allows for 
+
+Python stdlib
+=============
+
+* Python comes with a builtin web server that can be launched from the
+  cli like this: `python -m SimpleHTTPServer 8080` where `8080` is the
+  port you want it to be running on. If omitted, the default value is
+  `8000`. If you're using python 3, the `SimpleHTTPServer` module has
+  been replaced with `python3 -m http.server 8080`.
+  
+* The `json` module has a tool that makes manipulating JSON from the
+  cli a bit more bearable. It expects a valid json string read from
+  `stdin` and outputs a readable, indented representation. It works
+  really well with `curl`. I usually do something like this: `curl
+  http://server/api/stuff | python -m json.tool`
