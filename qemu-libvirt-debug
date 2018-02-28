@@ -9,7 +9,7 @@ that can be useful:
     destination hosts): compute.log, conductor.log, scheduler.log
 
     To enable Nova debug logs, add these config attributes:
-        . . .  
+        . . .
         verbose = True
         debug = True
         . . .
@@ -18,7 +18,7 @@ that can be useful:
 
         $ openstack-service restart nova
 
-  * /var/log/libvirt/qemu/instance.log -- For both compute nodes involved. 
+  * /var/log/libvirt/qemu/instance.log -- For both compute nodes involved.
     This will give us the QEMU CLI that's being used by libvirt
 
     If the test can be repeated, it'll be useful to enable debug logging
