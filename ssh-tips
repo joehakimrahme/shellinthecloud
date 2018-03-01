@@ -68,7 +68,6 @@ SSH tips and tricks
   redirecting a multitude of ports, you may want to look at `sshuttle`
   (https://github.com/sshuttle/sshuttle).
   
-* `-D` allows for 
 
 Python stdlib
 =============
