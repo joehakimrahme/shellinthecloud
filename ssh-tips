@@ -19,6 +19,14 @@ SSH tips and tricks
   useful if you want to fake your location on the web or bypass some
   firewall restrictions.
 
+* You can use the `-L` flag to bind a local port to a port listening
+  on a distant machine. This would allow user to query a distant
+  server as if it was a local request. This can be used for instance
+  to query a database that's only configured to respond to local
+  connections (which is the default on mariadb, pgsql and most common
+  rdbms). You can read more about the `-L` and `-R` ssh flags here:
+  https://www.ssh.com/ssh/tunneling/example
+
 * Options `-f`, `-N` and `-T` are useful for saving resources when you
   just want to build a tunnel or forward ports, and don't want to run
   any command. Check `man ssh` for more info on how to use them.
@@ -67,19 +75,3 @@ SSH tips and tricks
   a complex solution, but still want something more robust than
   redirecting a multitude of ports, you may want to look at `sshuttle`
   (https://github.com/sshuttle/sshuttle).
-  
-
-Python stdlib
-=============
-
-* Python comes with a builtin web server that can be launched from the
-  cli like this: `python -m SimpleHTTPServer 8080` where `8080` is the
-  port you want it to be running on. If omitted, the default value is
-  `8000`. If you're using python 3, the `SimpleHTTPServer` module has
-  been replaced with `python3 -m http.server 8080`.
-  
-* The `json` module has a tool that makes manipulating JSON from the
-  cli a bit more bearable. It expects a valid json string read from
-  `stdin` and outputs a readable, indented representation. It works
-  really well with `curl`. I usually do something like this: `curl
-  http://server/api/stuff | python -m json.tool`
