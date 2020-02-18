@@ -1,11 +1,23 @@
+_PS: I still need to figure out how to replace {{ 127.0.0.1 }} with
+the proper server name before I can publish this article. I guess once
+blogstrap will support custom metadatas...
+
+
 Why you shouldn't run arbitrary code over the network
 =====================================================
 
-It is not enough to inspect the file before running this horrible command. Try
-this:
+Piping the output of `curl` into `sh` is a common installation
+instruction given by popular software packages. It goes without saying
+that it's bad practice to do this, as it creates a vunlerability to
+your system, as you can never be sure what it is that you're
+running here.
 
-* Read the file located at http://rahme.info/install.sh
-* Execute `curl http://rahme.info/install.sh | sh`
+Some people will recommend inspecting the file before executing
+it. I'm here to show you that it's not enough to inspect the file
+before running this horrible command. Try this:
+
+* Read the file located at http://127.0.0.1:5000/install.sh
+* In a terminal, execute `curl http://127.0.0.1:5000/install.sh | sh`
 
 
 What happened?
@@ -17,13 +29,9 @@ Flask.
 
 What should I do?
 -----------------
-Download the file locally. Read it. Run it maybe.
 
-
-
-I also want to mention [this website][2] that catalogs all the projects that
-promote this practice in their installation instructions.
+Download the file locally. Read it. Run it maybe. If you really want
+to automate this, play with checksums and verify integrity before
+running anything.
 
 [1]: https://github.com/joehakimrahme/curlsh/blob/master/curlsh.py#L20
-[2]: http://curlpipesh.tumblr.com/
-
