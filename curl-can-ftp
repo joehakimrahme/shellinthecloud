@@ -3,14 +3,17 @@ curl as an FTP client
 
 `curl` natively supports FTP:
 
-* list files
 
-`curl ftp://<ip>/ --user username:password`
+| Operation       | Command                                                      |
+| -------------   | ------------------------------------------------------------ |
+| **List files**  | `curl ftp://$IP/ --user username:password`                  |
+| **Get File**    | `curl ftp://$IP/myfile --user username:password`            |
+| **Upload File** | `curl ftp://$IP/ -T my_local_file --user username:password` |
 
-* get file
 
-`curl ftp://<ip>/myfile --user username:password`
 
-* upload file
+Tell me more
+------------
 
-`curl ftp://<ip>/ -T my_local_file --user username:password`
+More info can be found in the [curl
+documentation](https://curl.haxx.se/docs/manual.html).
