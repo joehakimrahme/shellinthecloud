@@ -1,0 +1,267 @@
+# Chaining 2 services in systemd
+
+In this demo I want to define 2 systemd services, `serviceA` and `serviceB`,
+with the following conditions:
+
+1. `serviceA` executes a script that waits in the background for an event. Once
+   the event happens, the script exits successfully.
+2. `serviceB` is triggered automatically by systemd once `serviceA` exits.
+
+### Note about the examples
+
+Before we start take a few things into account:
+
+* I'm not explaining where to write service definition files and load them in
+  systemd. I assume you know how to do this.
+
+* The examples I'm writing are purposefuly stripped down. While they are correct
+  and should work, they're also extremely fragile and would require serious
+  hardening before being considered a working service file.
+
+### The script
+
+I'll be using `notify-send` in order to pop up notifications on my desktop. This
+is the simplest way for me to track execution of these services, without needing
+to open journals and logfiles. Here's a simple shell script that will be called
+by `ServiceA`:
+
+##### chaining-test.sh
+```
+#!/bin/sh
+
+sleep 5
+notify-send "Systemd chaining test" "Service A"
+```
+
+
+## First attempt: OnSuccess=
+
+My first attempt was to use the `OnSuccess=` directive that I came across in the
+[unit file documentation][1]
+
+```
+OnSuccess=
+  A space-separated list of one or more units that are activated when this unit enters the "inactive" state.
+```
+
+Therefore I write my two service files like this:
+
+##### ServiceA.service
+```
+[Unit]
+Description=Systemd Chaining Test - ServiceA
+OnSuccess=serviceB
+
+[Service]
+ExecStart=bash chaining-test.sh
+WorkingDirectory=/home/user
+Type=oneshot
+```
+
+
+##### ServiceB.service
+```
+[Unit]
+Description=Systemd Chaining Test - ServiceB
+
+[Service]
+ExecStart=notify-send "Systemd chaining Test" "Service B"
+```
+
+According to the documentation, this should give me what I want. I try it with
+`systemctl start serviceA`. I can see the first notification on my desktop and
+then ... nothing. No notification for serviceB. Try as I may, it just wasn't
+triggering serviceB. I double check with `systemctl status serviceB`...
+nothing. No sign of execution whatsoever.
+
+Things get even more suspicious when I check the status of `serviceA`:
+
+```
+$ systemctl --user status serviceA
+○ serviceA.service - Systemd Chaining Test - ServiceA
+     Loaded: loaded (/home/user/.config/systemd/user/serviceA.service; static)
+     Active: inactive (dead)
+
+Dec 21 21:48:08 localhost-laptop systemd[1873]: /home/user/.config/systemd/user/serviceA.service:7: Unknown key name 'OnSuccess' in section 'Service', ignoring.
+Dec 21 21:48:08 localhost-laptop systemd[1873]: Starting Systemd Chaining Test - ServiceA...
+Dec 21 21:48:08 localhost-laptop systemd[1873]: Finished Systemd Chaining Test - ServiceA.
+```
+
+**Unkown key name**! You kidding me? This is in the documentation. I quickly
+double check: `man systemd.unit`, no mention of `OnSuccess=`. WAT? Obviously,
+none of the systemd services installed on my laptop seem to use this directive:
+
+```
+$ grep -ri onsuccess /etc/systemd/system
+$ grep -ri onsuccess /lib/systemd
+$ grep -ri onsuccess /usr/lib/systemd
+```
+
+Nothing? I'm running this on my trusty Fedora, why wouldn't it ship this feature? Is this something that my distro forbids? Unless...
+
+`systemd` is an open source project, meaning that it's easy to go [through the
+code][2]. And thanks to quick grepping and the wonderful `git blame` utility, I
+was able to pinpoint [the exact commit that introduced this feature][3]
+`OnSuccess=`. May 25th, 2021. That's mighty recent. Could it be that it isn't
+released yet. Thankfully, the systemd developers maintain a [NEWS file that
+gives me the answer][4]: `OnSuccess=` was introduced to systemd in
+version 249. What's the version that my Fedora shipped?
+
+```
+$ systemctl --version
+systemd 248 (v248.9-1.fc34)
++PAM +AUDIT +SELINUX -APPARMOR +IMA +SMACK +SECCOMP +GCRYPT +GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified
+```
+
+248! I'm one version behind. I need to find something else.
+
+#### Quick note about OnSuccess=
+
+One thing that stood out to me is how come it took so long to introduce this
+feature? Wouldn't you think that systemd would've benefited from it for a long
+time. Reading the commit message gave me the explanation:
+
+```
+This is similar to OnFailure= but is activated whenever a unit returns
+into inactive state successfully.
+
+I was always afraid of adding this, since it effectively allows building
+loops and makes our engine Turing complete, but it pretty much already
+was it was just hidden.
+
+Given that we have per-unit ratelimits as well as an event loop global
+ratelimit I feel safe to add this finally, given it actually is useful.
+```
+
+To me this means two things:
+
+- `OnSuccess=` (like many systemd features) is dangerous to use. You have the
+  potential to have your system stuck in a loop. Avoid using it if possible.
+
+- There's obviously another way to do what I want.
+
+
+## Second Attempt: the "proper" way
+
+The clean way to define dependencies in systemd is to use the directives
+`Wants=`, `After=` and `Before=`. Let's look up their documentation:
+
+```
+Wants=
+
+Configures (weak) requirement dependencies on other units. This option may be
+specified more than once or multiple space-separated units may be specified in
+one option in which case dependencies for all listed names will be
+created. Dependencies of this type may also be configured outside of the unit
+configuration file by adding a symlink to a .wants/ directory accompanying the
+unit file. For details, see above.
+
+Units listed in this option will be started if the configuring unit is. However,
+if the listed units fail to start or cannot be added to the transaction, this
+has no impact on the validity of the transaction as a whole, and this unit will
+still be started. This is the recommended way to hook the start-up of one unit
+to the start-up of another unit.
+
+Note that requirement dependencies do not influence the order in which services
+are started or stopped. This has to be configured independently with the After=
+or Before= options. If unit foo.service pulls in unit bar.service as configured
+with Wants= and no ordering is configured with After= or Before=, then both
+units will be started simultaneously and without any delay between them if
+foo.service is activated.
+```
+...
+
+```
+Before=, After=
+
+These two settings expect a space-separated list of unit names. They may be
+specified more than once, in which case dependencies for all listed names are
+created.
+
+Those two settings configure ordering dependencies between units. If unit
+foo.service contains the setting Before=bar.service and both units are being
+started, bar.service's start-up is delayed until foo.service has finished
+starting up. After= is the inverse of Before=, i.e. while Before= ensures that
+the configured unit is started before the listed unit begins starting up, After=
+ensures the opposite, that the listed unit is fully started up before the
+configured unit is started.
+
+When two units with an ordering dependency between them are shut down, the
+inverse of the start-up order is applied. I.e. if a unit is configured with
+After= on another unit, the former is stopped before the latter if both are shut
+down. Given two units with any ordering dependency between them, if one unit is
+shut down and the other is started up, the shutdown is ordered before the
+start-up. It doesn't matter if the ordering dependency is After= or Before=, in
+this case. It also doesn't matter which of the two is shut down, as long as one
+is shut down and the other is started up; the shutdown is ordered before the
+start-up in all cases. If two units have no ordering dependencies between them,
+they are shut down or started up simultaneously, and no ordering takes place. It
+depends on the unit type when precisely a unit has finished starting up. Most
+importantly, for service units start-up is considered completed for the purpose
+of Before=/After= when all its configured start-up commands have been invoked
+and they either failed or reported start-up success. Note that this does
+includes ExecStartPost= (or ExecStopPost= for the shutdown case).
+
+Note that those settings are independent of and orthogonal to the requirement
+dependencies as configured by Requires=, Wants=, Requisite=, or BindsTo=. It is
+a common pattern to include a unit name in both the After= and Wants= options,
+in which case the unit listed will be started before the unit that is configured
+with these options.
+```
+
+These paragraphs are worth re-reading a couple of times. In particular these two
+lines:
+
+```
+[Wants=] is the recommended way to hook the start-up of one unit to the start-up of another unit.
+```
+
+and
+
+```
+It is a common pattern to include a unit name in both the After= and Wants= options, in which case the unit listed will be started before the unit that is configured with these options.
+```
+
+
+This is the reverse of what we were trying to do with `OnSucess=`. Instead of
+defining `serviceA` to launch `serviceB`, we want to define `serviceB` to launch
+`serviceA` as a prerequisite dependency. So in order to achieve what we wants,
+we need to include 2 directives in `serviceB`:
+
+- `Wants=serviceA.service`: indicates that `serviceA` should be launched prior
+  to `serviceB`.
+
+- `After=serviceA.service`: indicates that `serviceB` should wait until
+  `serviceA` exits, before it starts executing.
+
+And obviously, our CLI should now launch `serviceB`: `systemctl start serviceB`
+
+Here are the final service definitions:
+
+##### serviceA
+```
+[Unit]
+Description=Systemd Chaining Test - ServiceA
+
+[Service]
+ExecStart=bash chaining-test.sh
+WorkingDirectory=/home/user
+Type=oneshot
+```
+
+##### serviceB
+```
+[Unit]
+Description=Systemd Chaining Test - ServiceB
+After=serviceA.service
+Wants=serviceA.service
+
+[Service]
+ExecStart=notify-send "Systemd Chaining Test" "Service B"
+```
+
+
+ [1]: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
+ [2]: https://github.com/systemd/systemd
+ [3]: https://github.com/systemd/systemd/commit/294446dcb98eaa1ced5839da674c2065b1367a3a
+ [4]: https://github.com/systemd/systemd/blob/main/NEWS#L1286
